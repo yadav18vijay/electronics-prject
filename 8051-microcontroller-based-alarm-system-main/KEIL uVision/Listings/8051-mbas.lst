@@ -1,0 +1,430 @@
+C51 COMPILER V9.60.0.0   8051_MBAS                                                         03/25/2022 11:37:31 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE 8051_MBAS
+OBJECT MODULE PLACED IN .\Objects\8051-mbas.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE 8051-mbas.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings
+                    -\8051-mbas.lst) TABS(2) OBJECT(.\Objects\8051-mbas.obj)
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #include <stdio.h> 
+   3          #include <string.h>
+   4          
+   5          #define keypad P1
+   6          #define LCD P2
+   7          
+   8          sbit mrs_sensor=P3^2;
+   9          sbit pir_sensor=P3^3;
+  10          sbit rs =P3^4;
+  11          sbit en =P3^5;
+  12          sbit bzr_l = P3^6;
+  13          sbit bzr_h = P3^7;
+  14          sbit alarm_led=P0^5;
+  15          sbit pir_led=P0^6;
+  16          sbit rs_led=P0^7;
+  17          
+  18          int count = 1;
+  19          unsigned int lcd_cursor;
+  20          
+  21          char a = '1';
+  22          char b = '2';
+  23          char c = '5';
+  24          char d = '8';
+  25          unsigned char e;
+  26          unsigned char f;
+  27          unsigned char g;
+  28          unsigned char h;
+  29          
+  30          void string(char *);
+  31          void dely(unsigned int dly);
+  32          void lcd_cmd(unsigned char ch);
+  33          void lcd_data(unsigned char ch);
+  34          void lcd_str(unsigned char *str);
+  35          char get_keypad_key(void);
+  36          
+  37          void main(void)
+  38          { 
+  39   1        char KeyVal =0;
+  40   1        alarm_led = 0;
+  41   1        pir_led = 0;
+  42   1        rs_led = 0;
+  43   1        bzr_l = 1;
+  44   1        bzr_h = 1;
+  45   1        
+  46   1        lcd_cmd(0x38);
+  47   1        lcd_cmd(0x01);
+  48   1        lcd_cmd(0x10);
+  49   1        lcd_cmd(0x0C);
+  50   1        lcd_cmd(0x80);  
+  51   1        string("securiy system");       
+  52   1        dely(500);
+  53   1        lcd_cmd(0x01);  
+  54   1        
+C51 COMPILER V9.60.0.0   8051_MBAS                                                         03/25/2022 11:37:31 PAGE 2   
+
+  55   1        while(1)
+  56   1        { 
+  57   2          string("siren: ");
+  58   2            
+  59   2          while(1)
+  60   2          {         
+  61   3          alarm_led = 0;
+  62   3          dely(100);
+  63   3              
+  64   3          if(lcd_cursor < 4)
+  65   3          {
+  66   4            lcd_cmd(0x88+lcd_cursor);
+  67   4            if(lcd_cursor == 1)
+  68   4              e = KeyVal;
+  69   4            if(lcd_cursor == 2)
+  70   4              f = KeyVal;
+  71   4            if(lcd_cursor == 3)
+  72   4              g = KeyVal;
+  73   4          }
+  74   3              
+  75   3          if(lcd_cursor == 4)
+  76   3          { 
+  77   4            dely(100);
+  78   4            h = KeyVal;
+  79   4            lcd_cmd(0x88 + lcd_cursor);
+  80   4            KeyVal = get_keypad_key();
+  81   4            lcd_data(KeyVal);
+  82   4            dely(100);
+  83   4                
+  84   4            if(KeyVal == '*')
+  85   4            {
+  86   5              dely(200);
+  87   5                    
+  88   5              if(a == e && b == f && c == g && d == h)
+  89   5              {
+  90   6                lcd_cmd(0x01);
+  91   6                string("motion detected");
+  92   6                dely(200);
+  93   6                lcd_cmd(0x01);
+  94   6                string("security system");
+  95   6                    
+  96   6                while(count < 30)
+  97   6                {                 
+  98   7                  alarm_led = 1;
+  99   7                  bzr_l = 0;
+ 100   7                  dely(300);
+ 101   7                  bzr_l = 1;
+ 102   7                  alarm_led = 0;
+ 103   7                  dely(300);
+ 104   7                  count++;
+ 105   7                }
+ 106   6                      
+ 107   6                e = 'x';
+ 108   6                f = 'x';
+ 109   6                g = 'x';
+ 110   6                h = 'x';                
+ 111   6                count = 0;
+ 112   6                      
+ 113   6                while(pir_sensor == 0 && mrs_sensor == 0)
+ 114   6                { 
+ 115   7                  alarm_led = 1;
+ 116   7                  pir_led = 1;
+C51 COMPILER V9.60.0.0   8051_MBAS                                                         03/25/2022 11:37:31 PAGE 3   
+
+ 117   7                  rs_led = 1;
+ 118   7                  dely(200);
+ 119   7                }
+ 120   6                    
+ 121   6                lcd_cmd(0x01);
+ 122   6                string("No motion detected");
+ 123   6                dely(500);
+ 124   6                lcd_cmd(0x01);
+ 125   6                lcd_cursor = 0;
+ 126   6                    
+ 127   6                while(count < 50)
+ 128   6                {
+ 129   7                  string("Siren: ");
+ 130   7                      
+ 131   7                  while(1)
+ 132   7                  { 
+ 133   8                    alarm_led = 0;
+ 134   8                    pir_led = 0;
+ 135   8                    rs_led = 0;
+ 136   8                    bzr_l = 1;
+ 137   8                    dely(50);
+ 138   8                        
+ 139   8                    if(lcd_cursor < 4)                  
+ 140   8                    {
+ 141   9                      lcd_cmd(0x88+lcd_cursor);
+ 142   9                      if(lcd_cursor == 1)
+ 143   9                        e = KeyVal;
+ 144   9                      if(lcd_cursor == 2)
+ 145   9                        f = KeyVal;
+ 146   9                      if(lcd_cursor == 3)
+ 147   9                        g = KeyVal;
+ 148   9                      dely(50);
+ 149   9                      }           
+ 150   8                          
+ 151   8                    if(lcd_cursor == 4)
+ 152   8                    { 
+ 153   9                      dely(100);                    
+ 154   9                      h = KeyVal;
+ 155   9                      lcd_cmd(0x88 + lcd_cursor);
+ 156   9                      KeyVal = get_keypad_key();
+ 157   9                      lcd_data(KeyVal);
+ 158   9                      dely(100);
+ 159   9                          
+ 160   9                      if(KeyVal == '*')
+ 161   9                      { 
+ 162  10                        dely(200);
+ 163  10                              
+ 164  10                        if(a == e && b == f && c == g && d == h)
+ 165  10                        {     
+ 166  11                          lcd_cmd(0x01);
+ 167  11                          string("SIFRE DOGRU");
+ 168  11                          dely(200);
+ 169  11                          lcd_cmd(0x01);
+ 170  11                          string("ALARM PASIF");
+ 171  11                                
+ 172  11                          alarm_led = 0;
+ 173  11                          pir_led = 0;
+ 174  11                          rs_led = 0;
+ 175  11                          bzr_l = 1;
+ 176  11                                
+ 177  11                          while(1)
+ 178  11                          {
+C51 COMPILER V9.60.0.0   8051_MBAS                                                         03/25/2022 11:37:31 PAGE 4   
+
+ 179  12                            dely(100);
+ 180  12                          }
+ 181  11                        }
+ 182  10                          
+ 183  10                        else
+ 184  10                        { 
+ 185  11                          count = 0;
+ 186  11                          lcd_cmd(0x01);
+ 187  11                          string("GUVENLIK IHLALI");
+ 188  11                                
+ 189  11                          while(count < 300)
+ 190  11                          {
+ 191  12                            alarm_led = 1;
+ 192  12                            pir_led = 1;
+ 193  12                            rs_led = 1;
+ 194  12                            bzr_h = 0;
+ 195  12                                  
+ 196  12                            SCON = 0X50;
+ 197  12                            TMOD = 0X20;
+ 198  12                            TH1 = -3;
+ 199  12                            TR1 = 1;
+ 200  12                            SBUF = '1';
+ 201  12                                  
+ 202  12                            while(TI == 0);
+ 203  12                            TI = 0;
+ 204  12                                  
+ 205  12                            dely(300);                            
+ 206  12                            alarm_led = 0;
+ 207  12                            pir_led = 0;
+ 208  12                            rs_led = 0;
+ 209  12                            bzr_h = 1;                            
+ 210  12                            dely(300);
+ 211  12                          }
+ 212  11                        }                       
+ 213  10                      }
+ 214   9                            
+ 215   9                      else
+ 216   9                      {
+ 217  10                        lcd_cmd(0x01);
+ 218  10                        lcd_cursor = 0;
+ 219  10                        break;
+ 220  10                      }                       
+ 221   9                    }
+ 222   8                        
+ 223   8                    alarm_led = 1;
+ 224   8                    pir_led = 1;
+ 225   8                    rs_led = 1;
+ 226   8                    bzr_l = 0;                  
+ 227   8                    dely(100);
+ 228   8                        
+ 229   8                    KeyVal = get_keypad_key();
+ 230   8                    lcd_data(KeyVal);                 
+ 231   8                    dely(100);
+ 232   8                    count++;  
+ 233   8                          
+ 234   8                    if (lcd_cursor > 4 || KeyVal == '#')  
+ 235   8                    {
+ 236   9                      lcd_cmd(0x01);
+ 237   9                      lcd_cursor = 0;
+ 238   9                      break;
+ 239   9                    }
+ 240   8                  }
+C51 COMPILER V9.60.0.0   8051_MBAS                                                         03/25/2022 11:37:31 PAGE 5   
+
+ 241   7                }
+ 242   6              }
+ 243   5                    
+ 244   5              else
+ 245   5              { 
+ 246   6                lcd_cmd(0x01);
+ 247   6                string("HATALI SIFRE");
+ 248   6                dely(200);
+ 249   6                lcd_cmd(0x01);
+ 250   6                lcd_cursor = 0;
+ 251   6                count = 0;
+ 252   6                break;
+ 253   6              }   
+ 254   5            }
+ 255   4                  
+ 256   4            else
+ 257   4            {   
+ 258   5              lcd_cmd(0x01);
+ 259   5              lcd_cursor = 0;
+ 260   5              count = 0;
+ 261   5              break;
+ 262   5            }           
+ 263   4          }
+ 264   3              
+ 265   3          alarm_led = 1;
+ 266   3          dely(100);
+ 267   3              
+ 268   3          KeyVal = get_keypad_key();
+ 269   3          lcd_data(KeyVal);
+ 270   3          dely(100);        
+ 271   3              
+ 272   3          if (lcd_cursor > 4 || KeyVal == '#')  
+ 273   3          {
+ 274   4            lcd_cmd(0x01);
+ 275   4            lcd_cursor = 0;
+ 276   4            count = 0;
+ 277   4            break;
+ 278   4          }
+ 279   3          }
+ 280   2        } 
+ 281   1      }
+ 282          
+ 283          char get_keypad_key(void)
+ 284          {
+ 285   1        char key_val =0;
+ 286   1               keypad = 0xFE;   
+ 287   1                if(keypad == 0xee) // button 1
+ 288   1                {
+ 289   2                 key_val = '1';
+ 290   2                lcd_cursor++;
+ 291   2                } 
+ 292   1                if(keypad == 0xde) // button 2
+ 293   1                {
+ 294   2                 key_val = '2';
+ 295   2                  lcd_cursor++;
+ 296   2                } 
+ 297   1                 if(keypad == 0xbe) // button 3
+ 298   1                {
+ 299   2                 key_val = '3';
+ 300   2                  lcd_cursor++;
+ 301   2                }           
+ 302   1              keypad = 0xFD;
+C51 COMPILER V9.60.0.0   8051_MBAS                                                         03/25/2022 11:37:31 PAGE 6   
+
+ 303   1                if(keypad == 0xED) // button 4
+ 304   1                {
+ 305   2                key_val = '4';
+ 306   2                  lcd_cursor++;
+ 307   2                } 
+ 308   1                if(keypad == 0xDD) // button 5
+ 309   1                {
+ 310   2                key_val = '5';
+ 311   2                  lcd_cursor++;
+ 312   2                } 
+ 313   1                 if(keypad == 0xBD) // button 6
+ 314   1                {
+ 315   2                key_val = '6';
+ 316   2                  lcd_cursor++;
+ 317   2                }           
+ 318   1              keypad = 0xFB;
+ 319   1                if(keypad == 0xEB) // button 7
+ 320   1                {
+ 321   2                key_val = '7';
+ 322   2                  lcd_cursor++;
+ 323   2                } 
+ 324   1                if(keypad == 0xDB) // button 8
+ 325   1                {
+ 326   2                key_val = '8';
+ 327   2                  lcd_cursor++;
+ 328   2                } 
+ 329   1                 if(keypad == 0xBB) // button 9
+ 330   1                {
+ 331   2                key_val = '9';
+ 332   2                  lcd_cursor++;
+ 333   2                }         
+ 334   1              keypad = 0xF7;
+ 335   1                if(keypad == 0xE7) // button *
+ 336   1                {
+ 337   2                key_val = '*';
+ 338   2                  lcd_cursor++;
+ 339   2                } 
+ 340   1                if(keypad == 0xD7) // button 0
+ 341   1                {
+ 342   2                key_val = '0';
+ 343   2                  lcd_cursor++;
+ 344   2                } 
+ 345   1                 if(keypad == 0xB7) // button #
+ 346   1                {
+ 347   2                key_val = '#';
+ 348   2                  lcd_cursor++;
+ 349   2                } 
+ 350   1        return key_val;
+ 351   1      }
+ 352          
+ 353          void lcd_str(unsigned char *str)
+ 354          {
+ 355   1        unsigned int loop =0;
+ 356   1        for(loop =0; str[loop]!= '\0'; loop++)
+ 357   1        {
+ 358   2          lcd_data(str[loop]);
+ 359   2        }
+ 360   1      }
+ 361          
+ 362          void lcd_data(unsigned char ch)
+ 363          {
+ 364   1        LCD = ch;
+C51 COMPILER V9.60.0.0   8051_MBAS                                                         03/25/2022 11:37:31 PAGE 7   
+
+ 365   1        rs = 1;
+ 366   1        en = 1;
+ 367   1        dely(10);
+ 368   1        en = 0;
+ 369   1      }
+ 370          
+ 371          void lcd_cmd(unsigned char ch)
+ 372          {
+ 373   1        LCD = ch;
+ 374   1        rs = 0;
+ 375   1        en = 1;
+ 376   1        dely(10);
+ 377   1        en = 0;
+ 378   1      }
+ 379          
+ 380          void string(char *p)
+ 381          {
+ 382   1        while(*p)
+ 383   1        {
+ 384   2          lcd_data(*p++);
+ 385   2        }
+ 386   1      }
+ 387          
+ 388          void dely(unsigned int dly)
+ 389          {
+ 390   1        unsigned int loop =0;
+ 391   1        unsigned int delay_gen =0;
+ 392   1        for(loop =0; loop < dly; loop++)
+ 393   1        for(delay_gen =0; delay_gen < 1000; delay_gen++);
+ 394   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1176    ----
+   CONSTANT SIZE    =    135    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12       9
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
